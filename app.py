@@ -34,8 +34,8 @@ WAIT = 4
 REQUEST_MAX_TRY = 10
 
 # Your SMS-Activate API key
-API_KEY = "8e49fdB90d0209c085dd1df56cedf00e" #9b6b9eb50d0A30---------d9b7495b
-COUNTRY_CODE = "175" #i.e, Austrailian country code, See country table in sms-activate. I often use Australian phone number and it works almost always.
+API_KEY = ""#9b6b9eb50d0A30---------d9b7495b
+COUNTRY_CODE = "36" #i.e, Austrailian country code, See country table in sms-activate. I often use Australian phone number and it works almost always.
 
 sms_activate_url = "https://sms-activate.org/stubs/handler_api.php"
 phone_request_params = {
@@ -52,21 +52,37 @@ status_param = {
 
 SELECTORS = {
     "create_account":[
-        "//button[@class='VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-dgl2Hf ksBjEc lKxP2d LQeN7 FliLIb uRo0Xe TrZEUc Xf9GD']",
-        "//*[@class='JnOM6e TrZEUc kTeh9 KXbQ4b']"
-        ],
+        "/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div[2]/div/div",
+        # "//*[@id='hcfe-content']/section/div[1]/article/section/div/div/p[1]/a",
+        "//*[@id='yDmH0d']/c-wiz/div/div[3]/div/div[2]/div/div/div[1]/div/button",
+        "//*[@id='yDmH0d']/c-wiz/div/div[3]/div/div[2]/div/div",
+        "/html/body/div[1]/div[1]/div[2]/c-wiz/div/div[3]/div/div[2]",
+        "/html/body/div[1]/div[1]/div[2]/div/c-wiz/div/div[2]/div/div[2]/div/div[2]"
+    ],
     'for_my_personal_use':[
-        "//span[@class='VfPpkd-StrnGf-rymPhb-b9t22c']",
-        ], 
+        "//*[@id='yDmH0d']/c-wiz/div/div[3]/div/div[2]/div/div/div[2]/div/ul/li[1]",
+    ], 
     "first_name":"//*[@name='firstName']",
     "last_name":"//*[@name='lastName']",
     "username":"//*[@name='Username']",
     "password":"//*[@name='Passwd']",
     "confirm_password":"//*[@name='PasswdAgain']",
+    "Iagree":[
+        "//*[@id='yDmH0d']/div[2]/div/div[2]/div[3]/div[1]",
+        "//*[@id='yDmH0d']/c-wiz/div/div[3]/div/div[1]"#I agree conditions
+    ],
     "next":[
-            "//button[@class='VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ VfPpkd-LgbsSe-OWXEXe-dgl2Hf nCP5yc AjY5Oe DuMIQc LQeN7 qIypjc TrZEUc lw1w4b']",
-            "//button[contains(text(),'Next')]",
-            "//button[contains(text(),'I agree')]"
+        "//*[@id='createpasswordNext']", #creation de mdp
+        "//*[@id='collectNameNext']", 
+        "//*[@id='birthdaygenderNext']", #date de naissance
+        "//*[@id='yDmH0d']/c-wiz/div/div[3]/div/div[1]", #creation de l'adresse mail
+        "//*[@id='yDmH0d']/div[1]/div[1]/div[2]/div/div/div[3]/div/div[1]/div[2]/div/div/button", #btn ignoree
+        "//*[@id='next']", #btn next review information
+        "//*[@id='yDmH0d']/c-wiz/div/div[3]/div/div[1]",
+        "//*[@id='yDmH0d']/c-wiz/div/div[3]/div/div[1]/div/div/button/div[1]",
+    ],
+    "next_phone":[
+        "//*[@id='yDmH0d']/div[1]/div[1]/div[2]/div/div/div[3]/div/div[1]/div"
     ],
     "phone_number":"//*[@id='phoneNumberId']",
     "code":'//input[@name="code"]',
@@ -192,9 +208,10 @@ def setDriver():
         print('################ Use FreeProxy library to get HTTP proxy ################')
     except:
         print('################ Use Proxy DB to get HTTP proxy ################')
-        random_proxy = "http://"+ random.choice(proxy_list)[0]
+        random_proxy = "https://"+ random.choice(proxy_list)[0]
 
     HTTP_PROXY = random_proxy
+    #HTTPS_PROXY = random_proxy
     print(HTTP_PROXY)
     # HTTPS_PROXY = "https://user:pass@ip:port"
 
@@ -206,7 +223,7 @@ def setDriver():
     proxy_options['http'] = HTTP_PROXY
 
     ## Https proxy
-    # proxy_options['https'] = HTTPS_PROXY
+    #proxy_options['https'] = HTTPS_PROXY
 
     ## Socks proxy
     proxy_options['http'] = SOCKS_PROXY
@@ -233,7 +250,8 @@ def setDriver():
     print(user_agent)
     # Set Browser Option
     options = ChromeOptions()
-    # options = FirefoxOptions()
+    certificate_path = "./ca.crt"
+    #options = FirefoxOptions()
 
     prefs = {"profile.password_manager_enabled": False, "credentials_enable_service": False, "useAutomationExtension": False}
     options.add_experimental_option("prefs", prefs)
@@ -244,8 +262,8 @@ def setDriver():
     options.add_argument("disable-popup-blocking")
     options.add_argument("disable-notifications")
     options.add_argument("disable-popup-blocking")
-    options.add_argument('--ignore-ssl-errors=yes')
-    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--ssl-client-certificate-file={}'.format(certificate_path))
+
 
     # options.add_argument('--headless') # UI
     # options.add_argument("--incognito")
@@ -326,29 +344,22 @@ def main():
             print('################ Initialize Chrome Driver ################')
             driver = setDriver()
 
-            print('################ Random Refer website to bypass Google Bot Detection ################')
             if INCLUDE_REFER_URL:
                 random_url = random.choice(SITE_LIST)
                 driver.get(random_url)
 
             # 4 ways to go to account creation page.
-            random_int = random.randint(1,4)
-            if random_int ==  1:
-
-                print('################ Creat a google account article ################')
-                driver.get('https://support.google.com/accounts/answer/27441?hl=en')
-                WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH,'//*[@id="hcfe-content"]/section/div/div[1]/article/section/div/div[1]/div/div[2]/a[1]'))).click()
-                time.sleep(WAIT)
-            elif random_int == 2:
+            random_int = 1 #random.randint(1,2)
+            if random_int == 1:
                 print('################ Go to account page ################')
-                driver.get("https://accounts.google.com")
+                driver.get("https://accounts.google.com/")
 
                 time.sleep(WAIT)
                 
                 print('################ Click "Create account" ################')
                 for selector in SELECTORS["create_account"]:
                     try:
-                        WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector))).click()
+                        WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector ))).click()
                         break
                     except:
                         pass
@@ -360,22 +371,27 @@ def main():
                     except:
                         pass
 
-            elif random_int == 3:
+            elif random_int == 2:
                 driver.get('https://accounts.google.com/signup/v2/webcreateaccount?flowName=GlifWebSignIn&flowEntry=SignUp')
                 time.sleep(WAIT)
             
-            elif random_int == 4:
+            """ elif random_int == 4:
                 driver.get('https://support.google.com/mail/answer/56256?hl=en')
                 WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH,'//*[@id="hcfe-content"]/section/div/div[1]/article/section/div/div[1]/div/p[1]/a'))).click()
                 time.sleep(WAIT)
+                print('################ Click "Create Account" ################')
+                for selector in SELECTORS["create_account"]:
+                    try:
+                        WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector))).click()
+                        break
+                    except:
+                        pass """
 
             username_try = 0
 
             # if the username exists, it retries REQUEST_MAX_TRY times.
-            while username_try < REQUEST_MAX_TRY:
-                time.sleep(WAIT*2)
-
-                print('################ 1st step of Creation Wizard. ################')
+            while True:
+                time.sleep(WAIT)
 
 
                 print("################ Generate User Try: ", username_try+1, " ################")
@@ -401,7 +417,7 @@ def main():
                         break
                     except:
                         pass
-                time.sleep(WAIT*2)
+                time.sleep(WAIT)
 
                 print('################ 2st step of Creation Wizard. ################')
                 print('################ Birthday & Gender ################')
@@ -423,7 +439,7 @@ def main():
                 acc_gender = Select(select_acc_gender)
                 acc_gender.select_by_value('1')
 
-               #click next button
+            #click next button
                 print('################ Click "Next" Buton ################')
                 for selector in SELECTORS['next']:
                     try:
@@ -431,7 +447,7 @@ def main():
                         break
                     except:
                         pass
-                time.sleep(WAIT*2)
+                time.sleep(WAIT)
 
                 # set username
                 print('################ Set User Name ################')
@@ -463,7 +479,7 @@ def main():
                         break
                     except:
                         pass
-                time.sleep(WAIT*2)
+                time.sleep(WAIT)
                 print('################ Check Username Validation ################')
                 try:
                     WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, SELECTORS['username_warning'])))
@@ -494,145 +510,158 @@ def main():
                         break
                     except:
                         pass
-                time.sleep(WAIT*2)
-
-                print('################ Check Phone Verification ################')
-                without_verification = False
-                try:
-                    WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, SELECTORS['acc_day'])))
-                    without_verification = True
-                    print("No. It doesn't require.")
-                    break
-                except:
-                    print("Yes. It requires")
-                    pass
-                print('################ Input Phone Number ################')
-                try:
-                    phone_number_input = WebDriverWait(driver, WAIT*3).until(EC.presence_of_element_located((By.XPATH, SELECTORS['phone_number'])))
-                    time.sleep(WAIT)
-                    break
-                except:
-                    username_try = username_try + 1
-            number = ""
-            activationId = ""
-            count = 0
-            if without_verification == False:
-                print('################ Get Phone Number from SMS_Activate ################')
-                while(count < REQUEST_MAX_TRY):
-                    res = requests.get(url=sms_activate_url,params = phone_request_params)
-                    data = res.text
-                    print(data)
-                    if "ACCESS_NUMBER" in data:
-                        activationId = data.split(':')[1]
-                        number = data.split(':')[2]
-                        
-                        number = '+'+ number
-                        print(number)
-                        break
-                    if "NO_BALANCE" in data:
-                        print("Check your Balance in sms-activate.")
-                        exit()
-                    count = count+1
-                    time.sleep(WAIT)
-                if number == '':
-                    print("################ Cannot get phone number: ", REQUEST_MAX_TRY, " times retrial. ################")
-                    raise Exception("Go to next account.")
-                
-                phone_number_input.send_keys(number)
-
-                #click next button
-                print('################ Click "Next" Buton ################')
-                for selector in SELECTORS['next']:
-                    try:
-                        WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector))).click()
-                        break
-                    except:
-                        pass
-
-                print('################ Get SMS Code from SMS_Activate ################')
                 time.sleep(WAIT)
 
-                count_status = 0
-                code = ''
-                while(True):
-                # while(count_status < REQUEST_MAX_TRY):
-                    status_param['id'] = activationId
-                    print(status_param)
-                    res_code = requests.get(url=sms_activate_url,params = status_param)
-                    data_code = res_code.text
-                    print(data_code)
-                    if "STATUS_OK" in data_code:
-                        code = data_code.split(':')[1]
-                        break
-
-                    count_status = count_status + 1
-                    time.sleep(WAIT*5)
-
-                if code == '':
-                    print('Cannot receive code from sms_activate: ',REQUEST_MAX_TRY, " times retrial")
-                    raise Exception("Go to next account.")
-
-                print('################ Verify Phone Code ################')  
-                WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, SELECTORS['code']))).send_keys(code)
-
-                #click next button
-                print('################ Click "Verify" Buton ################')
-                for selector in SELECTORS['next']:
-                    try:
-                        WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector))).click()
-                        break
-                    except:
-                        pass
-
-            time.sleep(WAIT*2)
-            print('################ Clear Account Phone Number ################')
-            # WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, SELECTORS['acc_phone_number']))).clear()
-
-            # print('################ Account Birthday ################')
-            # # Date   
-            # WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, SELECTORS['acc_day']))).send_keys(birthday.split('/')[1])
-            
-            # # Month
-            # select_acc_month = WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, SELECTORS['acc_month'])))
-
-            # acc_month = Select(select_acc_month)
-            # acc_month.select_by_value(birthday.split('/')[0])
-
-            # # Year
-            # WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, SELECTORS['acc_year']))).send_keys(birthday.split('/')[2])
-
-            # select_acc_gender = WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, SELECTORS['acc_gender'])))
-
-            # # Gender
-            # acc_gender = Select(select_acc_gender)
-            # acc_gender.select_by_value('1')
-
-            print('################ Click "Next" Buton ################')
-            for selector in SELECTORS['next']:
+                print('################ Check Phone Verification ################')
                 try:
-                    WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector))).click()
-                    break
+                    error_message_content = driver.find_element(By.ID, "headingText").text
+                    if error_message_content == "Confirmez que vous n'êtes pas un robot":
+                        print('Yes. It requires')
+                        print('################ Input Phone Number ################')
+                        try:
+                            phone_number_input = WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, SELECTORS['phone_number'])))
+                        except:
+                            driver.quit()
+                        number = ""
+                        activationId = ""
+                        count = 0
+                        print('################ Get Phone Number from SMS_Activate ################')
+                        while(count < REQUEST_MAX_TRY):
+                            res = requests.get(url=sms_activate_url,params = phone_request_params)
+                            data = res.text
+                            print(data)
+                            if "ACCESS_NUMBER" in data:
+                                activationId = data.split(':')[1]
+                                number = data.split(':')[2]    
+                                number = '+'+ number
+                                print(number)
+                                break
+                            if "NO_BALANCE" in data:
+                                print("Check your Balance in sms-activate.")
+                                driver.quit()
+                            count = count+1
+                            time.sleep(WAIT)
+                        if number == '':
+                            print("################ Cannot get phone number: ", REQUEST_MAX_TRY, " times retrial. ################")
+                            raise Exception("Go to next account.") 
+                        phone_number_input.send_keys(number)
+                        #click next button
+                        print('################ Click "Next" Buton ################')
+                        for selector in SELECTORS['next_phone']:
+                            try:
+                                WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector))).click()
+                                break
+                            except:
+                                pass
+
+                        print('################ Get SMS Code from SMS_Activate ################')
+                        time.sleep(WAIT)
+
+                        count_status = 0
+                        code = ''
+                        while(True):
+                        # while(count_status < REQUEST_MAX_TRY):
+                            status_param['id'] = activationId
+                            print(status_param)
+                            res_code = requests.get(url=sms_activate_url,params = status_param)
+                            data_code = res_code.text
+                            print(data_code)
+                            if "STATUS_OK" in data_code:
+                                code = data_code.split(':')[1]
+                                break
+
+                            count_status = count_status + 1
+                            time.sleep(WAIT*5)
+
+                        if code == '':
+                            print('Cannot receive code from sms_activate: ',REQUEST_MAX_TRY, " times retrial")
+                            raise Exception("Go to next account.")
+
+                        print('################ Verify Phone Code ################')  
+                        WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, SELECTORS['code']))).send_keys(code)
+                        #click next button
+                        print('################ Click "Verify" Buton ################')
+
+                        for selector in SELECTORS['next']:
+                            try:
+                                WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector))).click()
+                                break
+                            except:
+                                pass
                 except:
                     pass
-            print('################ Click "I agree" Buton ################')
-            time.sleep(WAIT)
 
-            # Scroll to click "I agree"
-            driver.execute_script("window.scrollTo(0, 800)") 
-            time.sleep(WAIT)
-            for selector in SELECTORS['next']:
+                #testing msg mail rescue
                 try:
-                    WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector))).click()
-                    break
+                    error = False
+                    error_message_content = driver.find_element(By.ID, "headingText").text
+                    if error_message_content == "Erreur":
+                        error = True
+                        print("Error")
                 except:
                     pass
-            time.sleep(WAIT*3)
-            print('################ Save to Created.txt ################')
-            f = open('Created.txt', 'a')
-            f.write(user_name + "\t" + password + "\t" +birthday + "\t"+ number + "\n")
-            f.close()
 
-            driver.quit()
+                #testing msg error
+                try:
+                    error = False
+                    error_message_content = driver.find_element(By.ID, "headingText").text
+                    if error_message_content == "Erreur":
+                        error = True
+                        print("Error")
+                except:
+                    pass
+                
+                if not error:
+                    print('################ Click "Ignore mail rescue" Buton ################')
+                    for selector in SELECTORS["next"]:
+                        try:
+                            WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector ))).click()
+                            break
+                        except:
+                            pass
+                    time.sleep(WAIT)
+
+                if not error:
+                    print('################ Click "Next" Buton ################')
+                    for selector in SELECTORS["next"]:
+                        try:
+                            WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector ))).click()
+                            break
+                        except:
+                            pass
+                    time.sleep(WAIT)
+                if not error:
+                    print('################ Click "I agree" Buton ################')
+                    time.sleep(WAIT)
+
+                    # Scroll to click "I agree"
+                    driver.execute_script("window.scrollTo(0, 1200)") 
+                    time.sleep(WAIT)
+                    for selector in SELECTORS['Iagree']:
+                        try:
+                            WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector))).click()
+                            break
+                        except:
+                            pass
+                    time.sleep(WAIT)
+                if not error:
+                    print('################ Click "Modal" Buton ################')
+                    for selector in SELECTORS['Iagree']:
+                        try:
+                            WebDriverWait(driver, WAIT).until(EC.presence_of_element_located((By.XPATH, selector))).click()
+                            break
+                        except:
+                            pass
+                    time.sleep(WAIT)
+                    
+
+                if not error:
+                    print('################ Save to Created.txt ################')
+                    f = open('Created.txt', 'a')
+                    f.write("\n" + user_name + "@gmail.com" + "," + password)
+                    f.close()
+
+                driver.quit()
         except Exception as e:
             print(e)
             if driver is not None:
